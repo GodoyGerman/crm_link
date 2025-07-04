@@ -34,6 +34,9 @@ class ClienteUpdate(BaseModel):
 
 class ClienteResponse(ClienteBase):
     id: int
+    nombre: str
+    correo: EmailStr
+    activo: bool
 
     class Config:
-        orm_mode = True
+        from_attributes = True

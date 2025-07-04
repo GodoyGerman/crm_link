@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # CRM LINK - API Backend
 
 Este es el backend del CRM LINK, desarrollado con **FastAPI** y **PostgreSQL**. Permite la gestión de clientes, servicios y cotizaciones.
@@ -48,3 +49,7 @@ Panel administrativo
 👨‍💻 Autor
 Germán Godoy
 Desarrollador Backend | CRM LINK
+=======
+# crm_link
+Back CRM Link
+>>>>>>> 77903d3aba32a7aa9affffe886bc956974deae5e

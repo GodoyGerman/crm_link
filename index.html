@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Prueba API Clientes - CRM LINK</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 30px;
+      max-width: 700px;
+    }
+    h1 {
+      color: #2c3e50;
+    }
+    label {
+      display: block;
+      margin-top: 15px;
+      font-weight: bold;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      box-sizing: border-box;
+    }
+    button {
+      margin-top: 15px;
+      padding: 10px 15px;
+      background-color: #2980b9;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 3px;
+    }
+    button:hover {
+      background-color: #1f618d;
+    }
+    .response {
+      margin-top: 20px;
+      padding: 10px;
+      background-color: #ecf0f1;
+      border-radius: 5px;
+      white-space: pre-wrap;
+      max-height: 300px;
+      overflow-y: auto;
+      font-family: monospace;
+    }
+    hr {
+      margin: 30px 0;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Prueba API Clientes - CRM LINK</h1>
+
+  <section id="crear-cliente">
+    <h2>Crear Cliente</h2>
+    <label for="nombre">Nombre</label>
+    <input type="text" id="nombre" placeholder="Nombre completo" />
+
+    <label for="tipo_id">Tipo Identificación</label>
+    <select id="tipo_id">
+      <option value="CC">Cédula de ciudadanía</option>
+      <option value="NIT">NIT</option>
+      <option value="CE">Cédula de extranjería</option>
+    </select>
+
+    <label for="num_id">Número Identificación</label>
+    <input type="text" id="num_id" placeholder="Número de identificación" />
+
+    <label for="correo">Correo</label>
+    <input type="email" id="correo" placeholder="Correo electrónico" />
+
+    <label for="telefono">Teléfono</label>
+    <input type="tel" id="telefono" placeholder="Teléfono" />
+
+    <label for="direccion">Dirección</label>
+    <input type="text" id="direccion" placeholder="Dirección" />
+
+    <label for="ciudad">Ciudad</label>
+    <input type="text" id="ciudad" placeholder="Ciudad" />
+
+    <label for="nombre_empresa">Nombre Empresa</label>
+    <input type="text" id="nombre_empresa" placeholder="Nombre de la empresa" />
+
+    <label for="segmento">Segmento</label>
+    <input type="text" id="segmento" placeholder="Segmento" />
+
+    <label for="redes_sociales">Redes Sociales (JSON)</label>
+    <textarea id="redes_sociales" placeholder='{"instagram":"@user", "linkedin":"url"}'></textarea>
+
+    <label for="medio_adquisicion">Medio de adquisición</label>
+    <input type="text" id="medio_adquisicion" placeholder="Ej. Referido, publicidad" />
+
+    <label for="activo">Activo</label>
+    <select id="activo">
+      <option value="true">Sí</option>
+      <option value="false">No</option>
+    </select>
+
+    <button onclick="crearCliente()">Crear Cliente</button>
+  </section>
+
+  <hr />
+
+  <section id="listar-clientes">
+    <h2>Lista de Clientes</h2>
+    <button onclick="listarClientes()">Actualizar Lista</button>
+    <div id="lista_clientes" class="response"></div>
+  </section>
+
+  <hr />
+
+  <section id="actualizar-cliente">
+    <h2>Actualizar Cliente</h2>
+    <label for="update_id">ID Cliente</label>
+    <input type="number" id="update_id" placeholder="ID del cliente a actualizar" />
+
+    <label for="update_nombre">Nuevo Nombre</label>
+    <input type="text" id="update_nombre" placeholder="Nombre completo" />
+
+    <button onclick="actualizarCliente()">Actualizar Cliente</button>
+  </section>
+
+  <hr />
+
+  <section id="eliminar-cliente">
+    <h2>Eliminar Cliente</h2>
+    <label for="delete_id">ID Cliente</label>
+    <input type="number" id="delete_id" placeholder="ID del cliente a eliminar" />
+
+    <button onclick="eliminarCliente()">Eliminar Cliente</button>
+  </section>
+
+  <script>
+    const baseURL = "http://localhost:8000/clientes";
+
+    async function crearCliente() {
+      try {
+        const cliente = {
+          nombre: document.getElementById("nombre").value,
+          tipo_identificacion: document.getElementById("tipo_id").value,
+          numero_identificacion: document.getElementById("num_id").value,
+          correo: document.getElementById("correo").value,
+          telefono: document.getElementById("telefono").value,
+          direccion: document.getElementById("direccion").value,
+          ciudad: document.getElementById("ciudad").value,
+          nombre_empresa: document.getElementById("nombre_empresa").value,
+          segmento: document.getElementById("segmento").value,
+          redes_sociales: JSON.parse(document.getElementById("redes_sociales").value || "{}"),
+          medio_adquisicion: document.getElementById("medio_adquisicion").value,
+          activo: document.getElementById("activo").value === "true"
+        };
+
+        const response = await fetch(baseURL, {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify(cliente)
+        });
+
+        const data = await response.json();
+        alert("Cliente creado con ID: " + data.id);
+        listarClientes();
+
+      } catch (error) {
+        alert("Error: " + error.message);
+      }
+    }
+
+    async function listarClientes() {
+      try {
+        const response = await fetch(baseURL);
+        const data = await response.json();
+        document.getElementById("lista_clientes").textContent = JSON.stringify(data, null, 2);
+      } catch (error) {
+        alert("Error al obtener clientes: " + error.message);
+      }
+    }
+
+    async function actualizarCliente() {
+      try {
+        const id = document.getElementById("update_id").value;
+        const nombre = document.getElementById("update_nombre").value;
+
+        if (!id) {
+          alert("Ingrese el ID del cliente a actualizar");
+          return;
+        }
+
+        const updateData = { nombre };
+
+        const response = await fetch(`${baseURL}/${id}`, {
+          method: "PUT",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify(updateData)
+        });
+
+        if (response.ok) {
+          alert("Cliente actualizado");
+          listarClientes();
+        } else {
+          const errorData = await response.json();
+          alert("Error al actualizar: " + errorData.detail);
+        }
+      } catch (error) {
+        alert("Error: " + error.message);
+      }
+    }
+
+    async function eliminarCliente() {
+      try {
+        const id = document.getElementById("delete_id").value;
+        if (!id) {
+          alert("Ingrese el ID del cliente a eliminar");
+          return;
+        }
+
+        const response = await fetch(`${baseURL}/${id}`, {
+          method: "DELETE"
+        });
+
+        if (response.ok) {
+          alert("Cliente eliminado");
+          listarClientes();
+        } else {
+          const errorData = await response.json();
+          alert("Error al eliminar: " + errorData.detail);
+        }
+      } catch (error) {
+        alert("Error: " + error.message);
+      }
+    }
+     
+
+    // Carga la lista al abrir la página
+    listarClientes();
+  </script>
+</body>
+</html>
