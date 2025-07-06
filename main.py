@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from routers import clientes
 from routers import servicio
 from routers import categoria  # importa tu router
+from routers import cotizacion
 from database import Base, engine
 import logging
 
@@ -29,7 +30,7 @@ app.add_middleware(
 app.include_router(clientes.router, prefix="/clientes", tags=["Clientes"])
 app.include_router(servicio.router, prefix="/servicios", tags=["Servicios"])
 app.include_router(categoria.router, prefix="/categoria", tags=["categoria"])
-
+app.include_router(cotizacion.router, prefix="/cotizacion", tags=["cotizacion"])
 
 Base.metadata.create_all(bind=engine)
 

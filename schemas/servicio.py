@@ -2,12 +2,14 @@ from pydantic import BaseModel, EmailStr, Field
 from typing import Optional
 from decimal import Decimal
 from datetime import datetime
+from schemas.categoria import CategoriaBase
 
 class ServicioBase(BaseModel):
     
     nombre_servicio: str
     descripcion: Optional[str]
     categoria_id: int
+    categoria: Optional[CategoriaBase]  # Esto es lo importante
     precio_unitario: Decimal
     unidad_medida: Optional[str]
     duracion_estimada: Optional[str]
