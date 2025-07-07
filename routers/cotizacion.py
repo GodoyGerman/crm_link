@@ -6,8 +6,18 @@ from database import SessionLocal
 from models.cotizacion import Cotizacion
 from schemas.cotizacion import CotizacionCreate, CotizacionUpdate, CotizacionOut
 from typing import List
+from fastapi.responses import FileResponse
+from utils.pdf_generator import generar_pdf
+from datetime import datetime
+import os
+from fastapi.responses import FileResponse
+from jinja2 import Template
+from pathlib import Path
+
 
 router = APIRouter(prefix="/cotizaciones", tags=["Cotizaciones"])
+
+
 
 # Dependencia para obtener sesión de base de datos
 def get_db():
@@ -60,3 +70,6 @@ def eliminar_cotizacion(cotizacion_id: int, db: Session = Depends(get_db)):
     db.delete(cotizacion)
     db.commit()
     return {"mensaje": "Cotización eliminada exitosamente"}
+
+
+
