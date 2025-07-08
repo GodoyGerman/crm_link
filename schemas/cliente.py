@@ -15,6 +15,9 @@ class ClienteBase(BaseModel):
     medio_adquisicion: Optional[str]
     activo: Optional[bool] = True
 
+class ClienteOut(ClienteBase):
+    id: int
+
 class ClienteCreate(ClienteBase):
     pass
 

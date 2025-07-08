@@ -4,6 +4,7 @@ from database import SessionLocal
 from models.cliente import Cliente
 from schemas.cliente import ClienteCreate, ClienteUpdate, ClienteResponse
 from typing import List
+from schemas.cliente import ClienteOut
 
 router = APIRouter()
 
@@ -49,4 +50,13 @@ def eliminar_cliente(id: int, db: Session = Depends(get_db)):
     db.delete(cliente)
     db.commit()
     return {"message": "Cliente eliminado correctamente"}
+
+
+
+@router.get("/{cliente_id}", response_model=ClienteOut)
+def obtener_cliente(cliente_id: int, db: Session = Depends(get_db)):
+    cliente = db.query(Cliente).filter(Cliente.id == cliente_id).first()
+    if not cliente:
+        raise HTTPException(status_code=404, detail="Cliente no encontrado")
+    return cliente
 
