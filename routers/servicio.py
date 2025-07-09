@@ -20,19 +20,13 @@ def listar_servicios(db: Session = Depends(get_db)):
 
 @router.post("/", response_model=ServicioResponse)
 def crear_servicio(servicio: ServicioCreate, db: Session = Depends(get_db)):
-    print("Entré al endpoint crear_servicio")  # <-- prueba simple
-    try:
-        nuevo_servicio = Servicio(**servicio.dict())
-        db.add(nuevo_servicio)
-        db.commit()
-        db.refresh(nuevo_servicio)
-        return nuevo_servicio
-    except Exception as e:
-        db.rollback()
-        print("ERROR al crear servicio:", e)
-        import traceback
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail="Error interno en crear servicio")
+    nuevo_servicio = Servicio(**servicio.dict())
+    db.add(nuevo_servicio)
+    db.commit()
+    db.refresh(nuevo_servicio)
+    return nuevo_servicio
+
+   
 
 
 @router.put("/{id}", response_model=ServicioResponse)
