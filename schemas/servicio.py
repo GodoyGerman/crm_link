@@ -32,6 +32,7 @@ class ServicioUpdate(BaseModel):
 
 # Usado para GET (respuesta completa)
 class ServicioResponse(ServicioBase):
+    id: int
     categoria: Optional[CategoriaBase]  # Se incluye solo en la respuesta
     fecha_creacion: Optional[datetime]
 

@@ -26,21 +26,26 @@ def crear_servicio(servicio: ServicioCreate, db: Session = Depends(get_db)):
     db.refresh(nuevo_servicio)
     return nuevo_servicio
 
-   
-
-
-@router.put("/{id}", response_model=ServicioResponse)
-def actualizar_servicio(id: str, servicio_update: ServicioUpdate, db: Session = Depends(get_db)):
+@router.get("/{id}", response_model=ServicioResponse)
+def obtener_servicio(id: int, db: Session = Depends(get_db)):
     servicio = db.query(Servicio).filter(Servicio.id == id).first()
     if not servicio:
         raise HTTPException(status_code=404, detail="Servicio no encontrado")
+    return servicio   
 
-    for key, value in servicio_update.dict(exclude_unset=True).items():
-        setattr(servicio, key, value)
+
+@router.put("/{id}", response_model=ServicioResponse)
+def actualizar_servicio(id: int, servicio: ServicioUpdate, db: Session = Depends(get_db)):
+    db_servicio = db.query(Servicio).filter(Servicio.id == id).first()
+    if not db_servicio:
+        raise HTTPException(status_code=404, detail="Servicio no encontrado")
+
+    for key, value in servicio.dict(exclude_unset=True).items():
+        setattr(db_servicio, key, value)
 
     db.commit()
-    db.refresh(servicio)
-    return servicio
+    db.refresh(db_servicio)
+    return db_servicio
 
 @router.delete("/{id}")
 def eliminar_servicio(id: str, db: Session = Depends(get_db)):
