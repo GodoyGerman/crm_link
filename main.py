@@ -14,8 +14,10 @@ logging.basicConfig(level=logging.DEBUG)
 
 # Habilitar CORS
 origins = [
-    "http://localhost:5173",  # donde está el frontend
+    "http://localhost:5173",
     "http://127.0.0.1:5173",
+    "http://localhost:5174",  # agrega este puerto
+    "http://127.0.0.1:5174",  # y este también
 ]
 
 app.add_middleware(

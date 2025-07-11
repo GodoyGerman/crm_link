@@ -1,75 +1,54 @@
-# routers/cotizacion.py
-
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from database import SessionLocal
-from models.cotizacion import Cotizacion
-from schemas.cotizacion import CotizacionCreate, CotizacionUpdate, CotizacionOut
 from typing import List
-from fastapi.responses import FileResponse
-from utils.pdf_generator import generar_pdf
-from datetime import datetime
-import os
-from fastapi.responses import FileResponse
-from jinja2 import Template
-from pathlib import Path
+from database import get_db
+from models.cotizacion import Cotizacion, CotizacionItem
+from schemas.cotizacion import CotizacionCreate, CotizacionOut
+from sqlalchemy.orm import joinedload
 
+router = APIRouter(tags=["Cotizaciones"]) 
 
-router = APIRouter(prefix="/cotizaciones", tags=["Cotizaciones"])
-
-
-
-# Dependencia para obtener sesión de base de datos
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-# Crear cotización
-@router.post("/", response_model=CotizacionOut)
+@router.post("/crear/", response_model=CotizacionOut)
 def crear_cotizacion(cotizacion: CotizacionCreate, db: Session = Depends(get_db)):
-    nueva = Cotizacion(**cotizacion.dict())
-    db.add(nueva)
-    db.commit()
-    db.refresh(nueva)
-    return nueva
 
-# Listar todas
-@router.get("/", response_model=List[CotizacionOut])
+    db_cotizacion = Cotizacion(
+        nombre_cliente=cotizacion.nombre_cliente,
+        tipo_identificacion=cotizacion.tipo_identificacion,
+        identificacion=cotizacion.identificacion,
+        correo=cotizacion.correo,
+        direccion=cotizacion.direccion,
+        telefono=cotizacion.telefono,
+        ciudad=cotizacion.ciudad,
+        contacto=cotizacion.contacto,
+        condiciones=cotizacion.condiciones,
+        fecha_emision=cotizacion.fecha_emision,
+        valida_hasta=cotizacion.valida_hasta,
+        estado=cotizacion.estado,
+        pdf_url=cotizacion.pdf_url,
+        subtotal=cotizacion.subtotal,
+        iva=cotizacion.iva,
+        total=cotizacion.total
+    )
+
+    # Agregar los items (relación 1-n)
+    for item in cotizacion.items:
+        db_item = CotizacionItem(
+            servicio=item.servicio,
+            cantidad=item.cantidad,
+            unidad=item.unidad,
+            precio_unitario=item.precio_unitario,
+            subtotal=item.subtotal
+        )
+        db_cotizacion.items.append(db_item)
+
+    db.add(db_cotizacion)
+    db.commit()
+    db.refresh(db_cotizacion)
+
+    return db_cotizacion
+
+
+@router.get("/consulta/", response_model=List[CotizacionOut])
 def listar_cotizaciones(db: Session = Depends(get_db)):
-    return db.query(Cotizacion).all()
-
-# Obtener una por ID
-@router.get("/{cotizacion_id}", response_model=CotizacionOut)
-def obtener_cotizacion(cotizacion_id: int, db: Session = Depends(get_db)):
-    cotizacion = db.query(Cotizacion).filter(Cotizacion.id == cotizacion_id).first()
-    if not cotizacion:
-        raise HTTPException(status_code=404, detail="Cotización no encontrada")
-    return cotizacion
-
-# Actualizar
-@router.put("/{cotizacion_id}", response_model=CotizacionOut)
-def actualizar_cotizacion(cotizacion_id: int, datos: CotizacionUpdate, db: Session = Depends(get_db)):
-    cotizacion = db.query(Cotizacion).filter(Cotizacion.id == cotizacion_id).first()
-    if not cotizacion:
-        raise HTTPException(status_code=404, detail="Cotización no encontrada")
-    for campo, valor in datos.dict().items():
-        setattr(cotizacion, campo, valor)
-    db.commit()
-    db.refresh(cotizacion)
-    return cotizacion
-
-# Eliminar
-@router.delete("/{cotizacion_id}")
-def eliminar_cotizacion(cotizacion_id: int, db: Session = Depends(get_db)):
-    cotizacion = db.query(Cotizacion).filter(Cotizacion.id == cotizacion_id).first()
-    if not cotizacion:
-        raise HTTPException(status_code=404, detail="Cotización no encontrada")
-    db.delete(cotizacion)
-    db.commit()
-    return {"mensaje": "Cotización eliminada exitosamente"}
-
-
-
+    cotizaciones = db.query(Cotizacion).options(joinedload(Cotizacion.items)).all()
+    return cotizaciones

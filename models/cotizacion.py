@@ -1,35 +1,40 @@
-from sqlalchemy import Column, Integer, String, Text, Numeric, Date
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import Column, Integer, String, Float, Date, ForeignKey
+from sqlalchemy.orm import relationship
 from database import Base
-
-Base = declarative_base()
 
 class Cotizacion(Base):
     __tablename__ = "cotizaciones"
 
     id = Column(Integer, primary_key=True, index=True)
+    nombre_cliente = Column(String, nullable=False)
+    tipo_identificacion = Column(String, nullable=False)
+    identificacion = Column(String, nullable=False)
+    correo = Column(String, nullable=False)
+    direccion = Column(String, nullable=True)
+    telefono = Column(String, nullable=True)
+    ciudad = Column(String, nullable=True)
+    contacto = Column(String, nullable=True)
+    condiciones = Column(String, nullable=True)
+    fecha_emision = Column(Date, nullable=False)
+    valida_hasta = Column(Date, nullable=False)
+    estado = Column(String, nullable=False)
+    pdf_url = Column(String, nullable=True)
+    subtotal = Column(Float, nullable=False)
+    iva = Column(Float, nullable=False)
+    total = Column(Float, nullable=False)
 
-    nombre_cliente = Column(String(100))
-    tipo_identificacion = Column(String(50))
-    identificacion = Column(String(50))
-    correo = Column(String(100))
-    direccion = Column(Text)
-    telefono = Column(String(20))
-    ciudad = Column(String(100))
-    contacto = Column(String(100))
+    items = relationship("CotizacionItem", back_populates="cotizacion", cascade="all, delete-orphan")
 
-    servicio = Column(String(100))
-    cantidad = Column(Integer)
-    unidad = Column(String(50))
-    precio_unitario = Column(Numeric(12, 2))
 
-    subtotal = Column(Numeric(12, 2))
-    iva = Column(Numeric(12, 2))
-    total = Column(Numeric(12, 2))
+class CotizacionItem(Base):
+    __tablename__ = "cotizacion_items"
 
-    condiciones = Column(Text)
+    id = Column(Integer, primary_key=True, index=True)
+    cotizacion_id = Column(Integer, ForeignKey("cotizaciones.id"), nullable=False)
+    servicio = Column(String, nullable=False)
+    cantidad = Column(Integer, nullable=False)
+    unidad = Column(String, nullable=False)
+    precio_unitario = Column(Float, nullable=False)
+    subtotal = Column(Float, nullable=False)
 
-    fecha_emision = Column(Date)
-    valida_hasta = Column(Date)
-    estado = Column(String(20), default="pendiente")
-    pdf_url = Column(Text, nullable=True)
+    cotizacion = relationship("Cotizacion", back_populates="items")
