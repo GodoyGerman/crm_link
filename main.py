@@ -5,6 +5,7 @@ from routers import servicio
 from routers import categoria  # importa tu router
 from routers import cotizacion
 from database import Base, engine
+from routers import auth  # importa tu router
 import logging
 
 app = FastAPI()
@@ -33,6 +34,7 @@ app.include_router(clientes.router, prefix="/clientes", tags=["Clientes"])
 app.include_router(servicio.router, prefix="/servicios", tags=["Servicios"])
 app.include_router(categoria.router, prefix="/categoria", tags=["categoria"])
 app.include_router(cotizacion.router, prefix="/cotizacion", tags=["cotizacion"])
+app.include_router(auth.router)
 
 Base.metadata.create_all(bind=engine)
 

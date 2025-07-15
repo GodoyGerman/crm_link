@@ -4,6 +4,7 @@ from database import Base
 
 class Cotizacion(Base):
     __tablename__ = "cotizaciones"
+    
 
     id = Column(Integer, primary_key=True, index=True)
     nombre_cliente = Column(String, nullable=False)

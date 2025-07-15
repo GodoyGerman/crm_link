@@ -16,7 +16,12 @@ class CotizacionItemOut(CotizacionItemCreate):
     cotizacion_id: int
 
     class Config:
-        from_attributes = True  # reemplaza orm_mode en Pydantic V2
+        from_attributes = True  # Pydantic V2
+
+# Item para actualizar (igual que para crear, opcional)
+class CotizacionItemUpdate(CotizacionItemCreate):
+    # Si quieres que tenga id para distinguir items, agrégalo opcional
+    id: Optional[int] = None
 
 # Cotización para crear
 class CotizacionCreate(BaseModel):
@@ -38,12 +43,32 @@ class CotizacionCreate(BaseModel):
     total: float
     items: List[CotizacionItemCreate]
 
+# Cotización para actualizar: todos los campos opcionales y items opcionales
+class CotizacionUpdate(BaseModel):
+    nombre_cliente: Optional[str]
+    tipo_identificacion: Optional[str]
+    identificacion: Optional[str]
+    correo: Optional[str]
+    direccion: Optional[str]
+    telefono: Optional[str]
+    ciudad: Optional[str]
+    contacto: Optional[str]
+    condiciones: Optional[str]
+    fecha_emision: Optional[date]
+    valida_hasta: Optional[date]
+    estado: Optional[str]
+    pdf_url: Optional[str]
+    subtotal: Optional[float]
+    iva: Optional[float]
+    total: Optional[float]
+    items: Optional[List[CotizacionItemUpdate]]
+
 # Cotización para devolver (incluye items con IDs)
 class CotizacionOut(CotizacionCreate):
     id: int
     items: List[CotizacionItemOut]
-    
 
     class Config:
         from_attributes = True
+
 

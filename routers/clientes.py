@@ -60,3 +60,9 @@ def obtener_cliente(cliente_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Cliente no encontrado")
     return cliente
 
+@router.get("/clientes/buscar/")
+def buscar_cliente_por_documento(numero_identificacion: str, db: Session = Depends(get_db)):
+    cliente = db.query(Cliente).filter(Cliente.numero_identificacion == numero_identificacion).first()
+    if not cliente:
+        raise HTTPException(status_code=404, detail="Cliente no encontrado")
+    return cliente
