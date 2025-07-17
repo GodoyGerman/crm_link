@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from typing import List, Optional
 from datetime import date
 
@@ -8,6 +8,7 @@ class CotizacionItemCreate(BaseModel):
     cantidad: int
     unidad: str
     precio_unitario: float
+    descuento_porcentaje: float = Field(0.0, description="Descuento aplicado en porcentaje")
     subtotal: float
 
 # Item que sale al consultar
@@ -18,9 +19,8 @@ class CotizacionItemOut(CotizacionItemCreate):
     class Config:
         from_attributes = True  # Pydantic V2
 
-# Item para actualizar (igual que para crear, opcional)
+# Item para actualizar
 class CotizacionItemUpdate(CotizacionItemCreate):
-    # Si quieres que tenga id para distinguir items, agrégalo opcional
     id: Optional[int] = None
 
 # Cotización para crear
@@ -43,7 +43,7 @@ class CotizacionCreate(BaseModel):
     total: float
     items: List[CotizacionItemCreate]
 
-# Cotización para actualizar: todos los campos opcionales y items opcionales
+# Cotización para actualizar
 class CotizacionUpdate(BaseModel):
     nombre_cliente: Optional[str]
     tipo_identificacion: Optional[str]
@@ -63,12 +63,10 @@ class CotizacionUpdate(BaseModel):
     total: Optional[float]
     items: Optional[List[CotizacionItemUpdate]]
 
-# Cotización para devolver (incluye items con IDs)
+# Cotización para devolver
 class CotizacionOut(CotizacionCreate):
     id: int
     items: List[CotizacionItemOut]
 
     class Config:
         from_attributes = True
-
-

@@ -6,11 +6,32 @@ from models.cotizacion import Cotizacion, CotizacionItem
 from schemas.cotizacion import CotizacionCreate, CotizacionUpdate, CotizacionOut
 from sqlalchemy.orm import joinedload
 from utils.email import enviar_cotizacion_por_correo
+from utils.security import get_current_user
+from models.usuario import Usuario
+import logging
+
+logging.basicConfig(
+    level=logging.INFO,  # Cambia a DEBUG para más detalles
+    format="%(asctime)s - %(levelname)s - %(message)s"
+)
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(tags=["Cotizaciones"])
 
 @router.post("/crear/", response_model=CotizacionOut)
 def crear_cotizacion(cotizacion: CotizacionCreate, db: Session = Depends(get_db)):
+    import logging
+    logger = logging.getLogger(__name__)
+
+    subtotal = cotizacion.subtotal
+    iva = round(subtotal * 0.19, 2)
+    total = round(subtotal + iva, 2)
+
+    logger.info(f"Subtotal recibido: {subtotal}")
+    logger.info(f"IVA calculado: {iva}")
+    logger.info(f"Total calculado: {total}")
+
     db_cotizacion = Cotizacion(
         nombre_cliente=cotizacion.nombre_cliente,
         tipo_identificacion=cotizacion.tipo_identificacion,
@@ -25,42 +46,57 @@ def crear_cotizacion(cotizacion: CotizacionCreate, db: Session = Depends(get_db)
         valida_hasta=cotizacion.valida_hasta,
         estado=cotizacion.estado,
         pdf_url=cotizacion.pdf_url,
-        subtotal=cotizacion.subtotal,
-        iva=cotizacion.iva,
-        total=cotizacion.total
+        subtotal=subtotal,
+        iva=iva,
+        total=total
     )
 
     for item in cotizacion.items:
         db_item = CotizacionItem(
-            servicio=item.servicio,
-            cantidad=item.cantidad,
-            unidad=item.unidad,
-            precio_unitario=item.precio_unitario,
-            subtotal=item.subtotal
-        )
+        servicio=item.servicio,
+        cantidad=item.cantidad,
+        unidad=item.unidad,
+        precio_unitario=item.precio_unitario,
+        descuento_porcentaje=item.descuento_porcentaje,  # 👈 NUEVO
+        subtotal=item.subtotal
+    )
         db_cotizacion.items.append(db_item)
+
+    logger.info(f"Valores antes de commit: subtotal={db_cotizacion.subtotal}, iva={db_cotizacion.iva}, total={db_cotizacion.total}")
 
     db.add(db_cotizacion)
     db.commit()
     db.refresh(db_cotizacion)
+
+    logger.info(f"Guardado en BD: subtotal={db_cotizacion.subtotal}, iva={db_cotizacion.iva}, total={db_cotizacion.total}")
+
     return db_cotizacion
 
+
 @router.get("/{cotizacion_id}", response_model=CotizacionOut)
-def obtener_cotizacion(cotizacion_id: int, db: Session = Depends(get_db)):
+def obtener_cotizacion(
+    cotizacion_id: int,
+    db: Session = Depends(get_db),
+    usuario_actual: Usuario = Depends(get_current_user)  # protección JWT
+):
     cotizacion = db.query(Cotizacion).options(joinedload(Cotizacion.items)).filter(Cotizacion.id == cotizacion_id).first()
     if not cotizacion:
         raise HTTPException(status_code=404, detail="Cotización no encontrada")
     return cotizacion
 
 @router.get("/consulta/", response_model=List[CotizacionOut])
-def listar_cotizaciones(db: Session = Depends(get_db)):
+def listar_cotizaciones(
+    db: Session = Depends(get_db),
+    usuario_actual: Usuario = Depends(get_current_user)  # protección con JWT
+):
     cotizaciones = db.query(Cotizacion).options(joinedload(Cotizacion.items)).all()
     return cotizaciones
 
 @router.post("/enviar-correo")
 async def enviar_pdf_correo(
     correo: str = Form(...),
-    pdf: UploadFile = File(...)
+    pdf: UploadFile = File(...),
+    usuario_actual: Usuario = Depends(get_current_user)  # protección JWT
 ):
     contenido_pdf = await pdf.read()
     await enviar_cotizacion_por_correo(correo, contenido_pdf, pdf.filename)
@@ -106,6 +142,7 @@ def actualizar_cotizacion(cotizacion_id: int, datos: CotizacionUpdate, db: Sessi
                     item_existente.cantidad = item_data.cantidad
                     item_existente.unidad = item_data.unidad
                     item_existente.precio_unitario = item_data.precio_unitario
+                    item_existente.descuento_porcentaje = item_data.descuento_porcentaje  # 👈 NUEVO
                     item_existente.subtotal = item_data.subtotal
             else:
                 # Crear nuevo item
@@ -114,6 +151,7 @@ def actualizar_cotizacion(cotizacion_id: int, datos: CotizacionUpdate, db: Sessi
                     cantidad=item_data.cantidad,
                     unidad=item_data.unidad,
                     precio_unitario=item_data.precio_unitario,
+                    descuento_porcentaje=item_data.descuento_porcentaje,  # 👈 NUEVO
                     subtotal=item_data.subtotal,
                     cotizacion_id=cotizacion.id,
                 )

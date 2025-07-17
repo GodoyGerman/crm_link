@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, Float, Date, ForeignKey
 from sqlalchemy.orm import relationship
 from database import Base
+from sqlalchemy import Numeric
 
 class Cotizacion(Base):
     __tablename__ = "cotizaciones"
@@ -20,9 +21,9 @@ class Cotizacion(Base):
     valida_hasta = Column(Date, nullable=False)
     estado = Column(String, nullable=False)
     pdf_url = Column(String, nullable=True)
-    subtotal = Column(Float, nullable=False)
-    iva = Column(Float, nullable=False)
-    total = Column(Float, nullable=False)
+    subtotal = Column(Numeric(12, 2), nullable=False)
+    iva = Column(Numeric(12, 2), nullable=False)
+    total = Column(Numeric(12, 2), nullable=False)
 
     items = relationship("CotizacionItem", back_populates="cotizacion", cascade="all, delete-orphan")
 
@@ -36,6 +37,7 @@ class CotizacionItem(Base):
     cantidad = Column(Integer, nullable=False)
     unidad = Column(String, nullable=False)
     precio_unitario = Column(Float, nullable=False)
+    descuento_porcentaje = Column(Float, nullable=True, default=0.0)  # 👈 NUEVO
     subtotal = Column(Float, nullable=False)
 
     cotizacion = relationship("Cotizacion", back_populates="items")
